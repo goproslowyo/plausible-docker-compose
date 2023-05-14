@@ -1,19 +1,68 @@
 version: "3.3"
 services:
-  mail:
-    image: bytemark/smtp
+  # nginx to front plausible, letencrypt renewals, and streamstatus.
+  nginx:
+    # We build a custom nginx container from alpine with a proper nginx.conf
+    build:
+      context: ./nginx
+      dockerfile: nginx.Dockerfile
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx/config:/config
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /tmp/acme_challenge:/tmp/acme_challenge
     restart: always
 
+  # letencrypt to check and regenerate certs.
+  letsencrypt:
+    image: certbot/certbot:latest
+    command: sh -c "while :; do certbot renew --debug -v; R=$$(( ( RANDOM % 604800 )  + 259200 )); echo sleeping $$R seconds...; sleep $$R; done"
+    #command: sh -c "certbot certonly --debug --webroot -w /tmp/acme_challenge --expand -d p.infosecstreams.com --text --agree-tos --register-unsafely-without-email --rsa-key-size 4096 --verbose --preferred-challenges=http"
+    #command: sh -c "certbot certonly --staging --debug --webroot -w /tmp/acme_challenge --expand -d p.infosecstreams.com --text --agree-tos --register-unsafely-without-email --rsa-key-size 4096 --verbose --preferred-challenges=http"
+    entrypoint: ""
+    volumes:
+      - "/etc/letsencrypt:/etc/letsencrypt"
+      - "/tmp/acme_challenge:/tmp/acme_challenge"
+    environment:
+      - TERM=xterm
+    restart: unless-stopped
+    depends_on:
+      - nginx
+
+  # streamstatus to receive event requests from twitch
+  streamstatus:
+    image: ghcr.io/infosecstreams/streamstatus:latest
+    ports:
+      - "8080:8080"
+    env_file: streamstatus.env
+    restart: always
+    depends_on:
+      - nginx
+
+  # smtp container to send plausible email reports
+  mail:
+    build:
+      context: ./mail
+      dockerfile: mail.Dockerfile
+    image: bytemark/smtp
+    restart: always
+    env_file:
+      - mail-conf.env
+
+  # plausibles main database
   plausible_db:
-    image: postgres:12
+    image: postgres:14-alpine
     restart: always
     volumes:
       - db-data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_PASSWORD=postgres
+    env_file:
+      - postgres-conf.env
 
+  # plausibles event database
   plausible_events_db:
-    image: yandex/clickhouse-server:21.3.2.5
+    image: clickhouse/clickhouse-server:head-alpine
     restart: always
     volumes:
       - event-data:/var/lib/clickhouse
@@ -24,19 +73,32 @@ services:
         soft: 262144
         hard: 262144
 
-  plausible:
-    image: plausible/analytics:latest
+  geoip:
+    image: maxmindinc/geoipupdate
     restart: always
-    command: sh -c "sleep 10 && /entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh db init-admin && /entrypoint.sh run"
+    env_file:
+      geoip/geoip.env
+    volumes:
+      - geoip:/usr/share/GeoIP:rw
+
+  # plausible analytics
+  plausible:
+    image: plausible/analytics:v1
+    restart: always
+    command: sh -c "sleep 10 && /entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
     depends_on:
+      - geoip
       - plausible_db
       - plausible_events_db
       - mail
-    ports:
-      - 8000:8000
+      - nginx
+    volumes:
+      - ./geonames.csv:/etc/app/geonames.csv:ro
+      - geoip:/geoip:ro
     env_file:
       - plausible-conf.env
 
+# Our local docker volumes
 volumes:
   db-data:
     driver: local
@@ -44,3 +106,7 @@ volumes:
     driver: local
   geoip:
     driver: local
+
+ # For detailed migration instructions
+ # that were tested via trial by fire
+ # check: https://github.com/plausible/analytics/discussions/1911#discussioncomment-5894441
