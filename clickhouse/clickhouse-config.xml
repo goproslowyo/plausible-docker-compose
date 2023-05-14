@@ -1,4 +1,6 @@
 <clickhouse>
+    <listen_host>0.0.0.0</listen_host>
+    <merges_mutations_memory_usage_soft_limit>256</merges_mutations_memory_usage_soft_limit>
     <logger>
         <level>warning</level>
         <console>true</console>
