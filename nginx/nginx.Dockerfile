@@ -1,3 +1,2 @@
-FROM nginx:stable-alpine-slim
-RUN rm /etc/nginx/conf.d/default.conf
+FROM cgr.dev/chainguard/nginx:latest
 COPY /config/* /etc/nginx/conf.d/
