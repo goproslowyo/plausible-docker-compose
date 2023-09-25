@@ -34,8 +34,6 @@ services:
   # streamstatus to receive event requests from twitch
   streamstatus:
     image: ghcr.io/infosecstreams/streamstatus:latest
-    ports:
-      - "8080:8080"
     env_file: streamstatus.env
     restart: always
     depends_on:

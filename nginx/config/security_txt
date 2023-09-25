@@ -1,0 +1,17 @@
+location /security.txt {
+	add_header Content-Type 'text/plain';
+	add_header Cache-Control 'no-cache, no-store, must-revalidate';
+	add_header Pragma 'no-cache';
+	add_header Expires '0';
+	add_header Vary '*';
+	return 200 "Contact: mailto:security.txt@infosecstreams.com\nExpires: Sat, Sep 25 2038 01:45:05 +0700\nEncryption: Ask for Pubkey if needed.\n";
+}
+
+location /.well-known/security.txt {
+	add_header Content-Type 'text/plain';
+	add_header Cache-Control 'no-cache, no-store, must-revalidate';
+	add_header Pragma 'no-cache';
+	add_header Expires '0';
+	add_header Vary '*';
+	return 200 "Contact: mailto:security.txt@infosecstreams.com\nExpires: Sat, Sep 25 2038 01:45:05 +0700\nEncryption: Ask for Pubkey if needed.\n";
+}
