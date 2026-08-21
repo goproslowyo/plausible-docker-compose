@@ -9,11 +9,16 @@ services:
     ports:
       - 80:80
       - 443:443
+      - 8080:8080
+    user: root:root
     volumes:
       - ./nginx/config:/config
       - /etc/letsencrypt:/etc/letsencrypt:ro
-      - /tmp/acme_challenge:/tmp/acme_challenge
+      - acme-challenge:/tmp/acme_challenge
+      - /home/ec2-user/backspin:/var/www/backspin:ro
     restart: always
+    depends_on:
+      - letsencrypt
 
   # letencrypt to check and regenerate certs.
   letsencrypt:
@@ -23,17 +28,15 @@ services:
     #command: sh -c "certbot certonly --staging --debug --webroot -w /tmp/acme_challenge --expand -d p.infosecstreams.com --text --agree-tos --register-unsafely-without-email --rsa-key-size 4096 --verbose --preferred-challenges=http"
     entrypoint: ""
     volumes:
-      - "/etc/letsencrypt:/etc/letsencrypt"
-      - "/tmp/acme_challenge:/tmp/acme_challenge"
+      - /etc/letsencrypt:/etc/letsencrypt
+      - acme-challenge:/tmp/acme_challenge
     environment:
       - TERM=xterm
     restart: unless-stopped
-    depends_on:
-      - nginx
 
   # streamstatus to receive event requests from twitch
   streamstatus:
-    image: ghcr.io/infosecstreams/streamstatus:latest
+    image: ghcr.io/infosecstreams/streamstatus:v1.1.9-0-a6299a9
     env_file: streamstatus.env
     restart: always
     depends_on:
@@ -100,6 +103,7 @@ services:
 
 # Our local docker volumes
 volumes:
+  acme-challenge:
   db-data:
     driver: local
   event-data:
