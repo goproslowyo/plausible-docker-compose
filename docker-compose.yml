@@ -65,6 +65,7 @@ services:
   # plausibles event database
   plausible_events_db:
     image: clickhouse/clickhouse-server:head-alpine
+    mem_limit: 400m
     restart: always
     volumes:
       - event-data:/var/lib/clickhouse
@@ -87,6 +88,8 @@ services:
   # plausible analytics
   plausible:
     image: plausible/analytics:v1
+    mem_limit: 900m
+    memswap_limit: 900m
     restart: always
     command: sh -c "sleep 10 && /entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
     depends_on:
