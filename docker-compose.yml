@@ -36,7 +36,7 @@ services:
 
   # streamstatus to receive event requests from twitch
   streamstatus:
-    image: ghcr.io/infosecstreams/streamstatus:v1.1.9-0-a6299a9
+    image: ghcr.io/infosecstreams/streamstatus:latest
     env_file: streamstatus.env
     restart: always
     depends_on:
