@@ -88,8 +88,8 @@ services:
 
   # plausible analytics
   plausible:
-    # v1.5.1, pinned to the digest running on iss before the CE upgrade
-    image: plausible/analytics@sha256:d8f8760b8b66b0430aeb27a8ddf4c29c96f11855f8f248e8ef2d02a8787eafc6
+    # v2.0.0 is a required stop: run the NumericIDs data migration here
+    image: plausible/analytics:v2.0.0
     mem_limit: 900m
     memswap_limit: 900m
     restart: always
@@ -101,7 +101,6 @@ services:
       - mail
       - nginx
     volumes:
-      - ./geonames.csv:/etc/app/geonames.csv:ro
       - geoip:/geoip:ro
     env_file:
       - plausible-conf.env
