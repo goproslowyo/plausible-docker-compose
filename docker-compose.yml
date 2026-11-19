@@ -41,16 +41,6 @@ services:
     depends_on:
       - nginx
 
-  # smtp container to send plausible email reports
-  mail:
-    build:
-      context: ./mail
-      dockerfile: mail.Dockerfile
-    image: bytemark/smtp
-    restart: always
-    env_file:
-      - mail-conf.env
-
   # plausibles main database
   plausible_db:
     # PG16 per upstream CE since v2.1.0; data lives in a new volume so the
@@ -108,8 +98,6 @@ services:
         condition: service_healthy
       plausible_events_db:
         condition: service_healthy
-      mail:
-        condition: service_started
       nginx:
         condition: service_started
     volumes:
