@@ -57,7 +57,7 @@ services:
 
   # plausibles event database
   plausible_events_db:
-    image: clickhouse/clickhouse-server:24.3.3.102-alpine
+    image: clickhouse/clickhouse-server:24.12.6.70-alpine
     mem_limit: 400m
     restart: always
     environment:
@@ -86,7 +86,7 @@ services:
 
   # plausible analytics
   plausible:
-    image: ghcr.io/plausible/community-edition:v2.1.5
+    image: ghcr.io/plausible/community-edition:v3.0.1
     mem_limit: 900m
     memswap_limit: 900m
     restart: always
