@@ -57,8 +57,9 @@ services:
 
   # plausibles event database
   plausible_events_db:
-    image: clickhouse/clickhouse-server:24.12.6.70-alpine
-    mem_limit: 400m
+    image: clickhouse/clickhouse-server:25.11.9.34-alpine
+    # 25.x caps itself at 90% of this; ~250 MiB is used at idle
+    mem_limit: 512m
     restart: always
     environment:
       # keep network access for the passwordless default user Plausible uses
@@ -87,8 +88,8 @@ services:
   # plausible analytics
   plausible:
     image: ghcr.io/plausible/community-edition:v3.2.1
-    mem_limit: 900m
-    memswap_limit: 900m
+    mem_limit: 700m
+    memswap_limit: 700m
     restart: always
     command: sh -c "/entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
     depends_on:
