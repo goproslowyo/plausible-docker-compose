@@ -64,7 +64,8 @@ services:
 
   # plausibles event database
   plausible_events_db:
-    image: clickhouse/clickhouse-server:head-alpine
+    # 23.5.1.1391 (head build from 2023-05-13), pinned to the digest running on iss
+    image: clickhouse/clickhouse-server@sha256:be5842da24d5ebfa82ba604aaf0676bae066dbff60b168db389e7cca97096e5c
     mem_limit: 400m
     restart: always
     volumes:
@@ -87,7 +88,8 @@ services:
 
   # plausible analytics
   plausible:
-    image: plausible/analytics:v1
+    # v1.5.1, pinned to the digest running on iss before the CE upgrade
+    image: plausible/analytics@sha256:d8f8760b8b66b0430aeb27a8ddf4c29c96f11855f8f248e8ef2d02a8787eafc6
     mem_limit: 900m
     memswap_limit: 900m
     restart: always
