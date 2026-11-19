@@ -86,7 +86,7 @@ services:
 
   # plausible analytics
   plausible:
-    image: ghcr.io/plausible/community-edition:v3.0.1
+    image: ghcr.io/plausible/community-edition:v3.2.1
     mem_limit: 900m
     memswap_limit: 900m
     restart: always
