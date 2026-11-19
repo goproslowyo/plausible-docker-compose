@@ -43,12 +43,13 @@ services:
 
   # plausibles main database
   plausible_db:
-    # PG16 per upstream CE since v2.1.0; data lives in a new volume so the
+    # PG18 (what upstream CI tests at v3.2.1); data lives in a new volume so the
     # PG14 db-data volume stays untouched as a rollback
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     restart: always
     volumes:
-      - db-data-pg16:/var/lib/postgresql/data
+      # 18+ images keep PGDATA under /var/lib/postgresql/18/docker
+      - db-data-pg18:/var/lib/postgresql
     env_file:
       - postgres-conf.env
     healthcheck:
@@ -118,7 +119,7 @@ volumes:
   acme-challenge:
   db-data:
     driver: local
-  db-data-pg16:
+  db-data-pg18:
     driver: local
   event-data:
     driver: local
