@@ -1,4 +1,3 @@
-version: "3.3"
 services:
   # nginx to front plausible, letencrypt renewals, and streamstatus.
   nginx:
@@ -62,13 +61,18 @@ services:
       - db-data-pg16:/var/lib/postgresql/data
     env_file:
       - postgres-conf.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      start_period: 1m
 
   # plausibles event database
   plausible_events_db:
-    # 23.5.1.1391 (head build from 2023-05-13), pinned to the digest running on iss
-    image: clickhouse/clickhouse-server@sha256:be5842da24d5ebfa82ba604aaf0676bae066dbff60b168db389e7cca97096e5c
+    image: clickhouse/clickhouse-server:24.3.3.102-alpine
     mem_limit: 400m
     restart: always
+    environment:
+      # keep network access for the passwordless default user Plausible uses
+      - CLICKHOUSE_SKIP_USER_SETUP=1
     volumes:
       - event-data:/var/lib/clickhouse
       - ./clickhouse/clickhouse-config.xml:/etc/clickhouse-server/config.d/logging.xml:ro
@@ -78,6 +82,9 @@ services:
         soft: 262144
         hard: 262144
       nproc: 30000
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 -O - http://127.0.0.1:8123/ping || exit 1"]
+      start_period: 1m
 
   geoip:
     image: maxmindinc/geoipupdate
@@ -89,20 +96,31 @@ services:
 
   # plausible analytics
   plausible:
-    # v2.0.0 is a required stop: run the NumericIDs data migration here
-    image: plausible/analytics:v2.0.0
+    image: ghcr.io/plausible/community-edition:v2.1.5
     mem_limit: 900m
     memswap_limit: 900m
     restart: always
-    command: sh -c "sleep 10 && /entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
+    command: sh -c "/entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
     depends_on:
-      - geoip
-      - plausible_db
-      - plausible_events_db
-      - mail
-      - nginx
+      geoip:
+        condition: service_started
+      plausible_db:
+        condition: service_healthy
+      plausible_events_db:
+        condition: service_healthy
+      mail:
+        condition: service_started
+      nginx:
+        condition: service_started
     volumes:
       - geoip:/geoip:ro
+      - plausible-data:/var/lib/plausible
+    environment:
+      - TMPDIR=/var/lib/plausible/tmp
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
     env_file:
       - plausible-conf.env
 
@@ -116,6 +134,8 @@ volumes:
   event-data:
     driver: local
   geoip:
+    driver: local
+  plausible-data:
     driver: local
 
  # For detailed migration instructions

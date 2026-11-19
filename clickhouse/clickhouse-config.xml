@@ -1,5 +1,8 @@
 <clickhouse>
     <listen_host>0.0.0.0</listen_host>
+    <!-- Upper bound only; the default (5 GiB) is far above the 400m container
+         limit. Upstream CE uses 500 MiB; our dataset is tiny, so go lower. -->
+    <mark_cache_size>134217728</mark_cache_size>
     <logger>
         <level>warning</level>
         <console>true</console>
