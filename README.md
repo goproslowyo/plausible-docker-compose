@@ -13,7 +13,6 @@ This repository acts as an opionated example to run:
 
 1. Ensure all the required *.env files are in place:
 
-* geoip/geoip.env
 * plausible-conf.env
 * postgres-conf.env
 * streamstatus.env
@@ -25,7 +24,6 @@ $ docker-compose up -d
 Starting hosting_plausible_db_1        ... done
 Starting hosting_nginx_1               ... done
 Starting hosting_plausible_events_db_1 ... done
-Starting hosting_geoip_1               ... done
 Starting hosting_plausible_1           ... done
 Starting hosting_streamstatus_1        ... done
 Starting hosting_letsencrypt_1         ... done
