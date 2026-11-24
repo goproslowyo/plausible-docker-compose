@@ -23,9 +23,26 @@ services:
 
   # streamstatus to receive event requests from twitch
   streamstatus:
-    image: ghcr.io/infosecstreams/streamstatus:latest
+    # Pinned to a signed digest by ./deploy-streamstatus (via .env); :latest only as a fallback.
+    image: ${STREAMSTATUS_IMAGE:-ghcr.io/infosecstreams/streamstatus:latest}
     env_file: streamstatus.env
     restart: always
+    environment:
+      # Live state, stream history and stats (SQLite, WAL mode).
+      SS_DB_PATH: /data/streamstatus.db
+    volumes:
+      - streamstatus-data:/data
+      - ./secrets:/run/secrets:ro
+    ports:
+      # Loopback only: the deploy script's health check. Caddy reaches the bot over the compose network.
+      - "127.0.0.1:8080:8080"
+    tmpfs:
+      - /tmp
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
     depends_on:
       - caddy
 
@@ -94,6 +111,7 @@ services:
 volumes:
   caddy-data:
   caddy-config:
+  streamstatus-data:
   db-data-pg18:
     driver: local
   event-data:
