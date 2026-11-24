@@ -5,9 +5,8 @@
 This repository acts as an opionated example to run:
 
 * [Plausible Analytics](https://github.com/plausible/analytics).
-* [Certbot](https://github.com/certbot/certbot)
+* [Caddy](https://github.com/caddyserver/caddy)
 * [StreamStatus](https://github.com/infosecstreams/streamstatus)
-* [nginx](https://github.com/nginx/nginx)
 
 ### How to use
 
@@ -22,11 +21,10 @@ This repository acts as an opionated example to run:
 ```shell
 $ docker-compose up -d
 Starting hosting_plausible_db_1        ... done
-Starting hosting_nginx_1               ... done
+Starting hosting_caddy_1               ... done
 Starting hosting_plausible_events_db_1 ... done
 Starting hosting_plausible_1           ... done
 Starting hosting_streamstatus_1        ... done
-Starting hosting_letsencrypt_1         ... done
 ```
 
 Find instructions on how to run Plausible Analytics Self Hosted [in our docs](https://plausible.io/docs/self-hosting).

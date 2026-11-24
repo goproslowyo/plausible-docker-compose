@@ -1,37 +1,25 @@
 services:
-  # nginx to front plausible, letencrypt renewals, and streamstatus.
-  nginx:
-    # We build a custom nginx container from alpine with a proper nginx.conf
-    build:
-      context: ./nginx
-      dockerfile: nginx.Dockerfile
-    ports:
-      - 80:80
-      - 443:443
-      - 8080:8080
-    user: root:root
-    volumes:
-      - ./nginx/config:/config
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - acme-challenge:/tmp/acme_challenge
-      - /home/ec2-user/backspin:/var/www/backspin:ro
+  # Caddy: TLS (automatic HTTPS, HTTP/3) and routing for p.infosecstreams.com.
+  # Replaces nginx + certbot. Config: ./caddy/Caddyfile.
+  caddy:
+    image: caddy:2.11.9-alpine@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0
     restart: always
-    depends_on:
-      - letsencrypt
-
-  # letencrypt to check and regenerate certs.
-  letsencrypt:
-    image: certbot/certbot:latest
-    command: sh -c "while :; do certbot renew --debug -v; R=$$(( ( RANDOM % 604800 )  + 259200 )); echo sleeping $$R seconds...; sleep $$R; done"
-    #command: sh -c "certbot certonly --debug --webroot -w /tmp/acme_challenge --expand -d p.infosecstreams.com --text --agree-tos --register-unsafely-without-email --rsa-key-size 4096 --verbose --preferred-challenges=http"
-    #command: sh -c "certbot certonly --staging --debug --webroot -w /tmp/acme_challenge --expand -d p.infosecstreams.com --text --agree-tos --register-unsafely-without-email --rsa-key-size 4096 --verbose --preferred-challenges=http"
-    entrypoint: ""
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt
-      - acme-challenge:/tmp/acme_challenge
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
     environment:
-      - TERM=xterm
-    restart: unless-stopped
+      ACME_EMAIL: security.txt@infosecstreams.com
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    mem_limit: 128m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   # streamstatus to receive event requests from twitch
   streamstatus:
@@ -39,7 +27,7 @@ services:
     env_file: streamstatus.env
     restart: always
     depends_on:
-      - nginx
+      - caddy
 
   # plausibles main database
   plausible_db:
@@ -89,7 +77,7 @@ services:
         condition: service_healthy
       plausible_events_db:
         condition: service_healthy
-      nginx:
+      caddy:
         condition: service_started
     volumes:
       - plausible-data:/var/lib/plausible
@@ -104,7 +92,8 @@ services:
 
 # Our local docker volumes
 volumes:
-  acme-challenge:
+  caddy-data:
+  caddy-config:
   db-data-pg18:
     driver: local
   event-data:
