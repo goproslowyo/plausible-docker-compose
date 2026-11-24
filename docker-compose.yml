@@ -85,8 +85,11 @@ services:
   # plausible analytics
   plausible:
     image: ghcr.io/plausible/community-edition:v3.2.2
-    mem_limit: 700m
-    memswap_limit: 700m
+    # Steady ~450m, but a GeoLite update briefly holds two copies of the
+    # City DB (~650m+): at 700m it OOM-looped and each restart re-downloaded
+    # the DB until MaxMind returned 429 (2026-11-21). Swap absorbs the peak.
+    mem_limit: 1g
+    memswap_limit: 1536m
     restart: always
     command: sh -c "/entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
     depends_on:
